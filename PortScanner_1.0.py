@@ -8,6 +8,7 @@ import sys
 from pyfiglet import Figlet 
 from termcolor import cprint
 from colorama import init
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 print_lock = threading.Lock()
 open_ports = []  # Açık portları toplayacağız
@@ -38,7 +39,7 @@ def suggest_security(port):
 def scan_port(target_ip, port):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(1)
+        sock.settimeout(0.5)
         result = sock.connect_ex((target_ip, port))
         if result == 0:
             with print_lock:
@@ -89,14 +90,17 @@ def main():
     type_effect(f"\n🔍 Scanning {target_ip} from port {start_port} to {end_port}", color="cyan")
     type_effect(f"🕒 Start time: {datetime.now()}\n", color="white")
 
-    threads = []
-    for port in range(start_port, end_port + 1):
-        t = threading.Thread(target=scan_port, args=(target_ip, port))
-        threads.append(t)
-        t.start()
-
-    for thread in threads:
-        thread.join()
+    try:
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            futures = {executor.submit(scan_port, target_ip, port): port for port in range(start_port, end_port + 1)}
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception:
+                    pass
+    except KeyboardInterrupt:
+        type_effect("\n[!] Scan interrupted by user. Shutting down gracefully...", color="red")
+        return
 
     type_effect(f"\n✅ Scan completed at: {datetime.now()}", color="green")
     type_effect(f"\n📖 Open Ports and Security Recommendations:\n", color="yellow")
