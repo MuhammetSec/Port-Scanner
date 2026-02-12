@@ -11,7 +11,7 @@ from colorama import init
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 print_lock = threading.Lock()
-open_ports = []  # Açık portları toplayacağız
+open_ports = []  # Açık portları ve servis adlarını toplayacağız
 init()
 
 # Harf harf yazdırma fonksiyonu
@@ -21,6 +21,13 @@ def type_effect(text, color="white", delay=0.01):
         sys.stdout.flush()
         time.sleep(delay)
     print()
+
+# Portun servis adını algılayan fonksiyon
+def get_service_name(port):
+    try:
+        return socket.getservbyport(port, 'tcp')
+    except (OSError, socket.error):
+        return "Unknown"
 
 # Açık portlara göre güvenlik önerileri
 def suggest_security(port):
@@ -38,13 +45,14 @@ def suggest_security(port):
 # Her portu ayrı thread ile tarayan fonksiyon
 def scan_port(target_ip, port):
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IPv4 ve TCP kullanarak socket oluştur.
         sock.settimeout(0.5)
-        result = sock.connect_ex((target_ip, port))
+        result = sock.connect_ex((target_ip, port)) # connect_ex, başarısızlık durumunda hata kodu döndürür.
         if result == 0:
+            service = get_service_name(port)
             with print_lock:
-                type_effect(f"[+] Port {port} is open", color="green", delay=0.005)
-                open_ports.append(port)
+                type_effect(f"[+] Port {port} is open ({service})", color="green", delay=0.005)
+                open_ports.append((port, service))
         sock.close()
     except:
         pass
@@ -106,8 +114,8 @@ def main():
     type_effect(f"\n📖 Open Ports and Security Recommendations:\n", color="yellow")
 
     if open_ports:
-        for port in sorted(open_ports):
-            type_effect(f"Port {port}: {suggest_security(port)}", color="white", delay=0.003)
+        for port, service in sorted(open_ports):
+            type_effect(f"Port {port} ({service}): {suggest_security(port)}", color="white", delay=0.003)
     else:
         type_effect("No open ports found.", color="red")
 
