@@ -1,20 +1,20 @@
 
-# 🔍 Port Scanner
+# Port Scanner
 ```markdown
 Python CLI tabanlı çoklu iş parçacıklı (multithreaded) port tarayıcı. Güvenlik önerileriyle birlikte açık portları tespit eder. Kullanıcı dostu arayüz, ASCII logo ve animasyonlu giriş ekranıyla birlikte gelir.
 ```
 
-## 🚀 Özellikler
+## Özellikler
 ```markdown
 - ⚡ Hızlı tarama (multi-threaded)
-- 🎨 Renkli terminal çıktısı (colorama + termcolor)
-- 🔠 ASCII logo ve type-effect animasyon
-- 🛡️ Açık portlara özel güvenlik önerileri
-- 🧪 CLI argüman desteği
+- Renkli terminal çıktısı (colorama + termcolor)
+- ASCII logo ve type-effect animasyon
+- Açık portlara özel güvenlik önerileri
+- CLI argüman desteği
 ```
 ---
 
-## 🧰 Gereksinimler
+## Gereksinimler
 ```markdown
 Proje sanal bir ortamda çalıştırılmalı:
 ```
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ---
 
-## 📦 Kurulum
+## Kurulum
 
 ```bash
 git clone https://github.com/MuhammetSec-Exilex/Port-Scanner.git
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🧪 Kullanım
+## Kullanım
 
 ```bash
 python3 PortScanner_1.0.py -t <hedef_ip_adresi> -sp <başlangıç_portu> -ep <bitiş_portu>
@@ -53,13 +53,13 @@ python3 PortScanner_1.0.py -t scanme.nmap.org -sp 20 -ep 100
 
 ---
 
-## 📸 Ekran Görüntüsü
+## Ekran Görüntüsü
 
 ![screenshot](https://github.com/MuhammetSec-Exilex/Port-Scanner/blob/main/assets/image1.png)
 
 ---
 
-## 🧠 Örnek Güvenlik Uyarısı
+## Örnek Güvenlik Uyarısı
 
 ```
 Port 21 (FTP): FTP transmits data in plaintext... 🔐 Öneri: FTPS/SFTP'ye geçin, anonim erişimi kapatın.
@@ -67,7 +67,7 @@ Port 21 (FTP): FTP transmits data in plaintext... 🔐 Öneri: FTPS/SFTP'ye geç
 
 ---
 
-## � Versiyon 1.1 - Performans & Stabilite Güncellemesi
+## Versiyon 1.1 - Performans & Stabilite Güncellemesi
 
 ### Performans İyileştirmeleri
 - **Çoklu İş Parçacığı Optimizasyonu**: Manuel thread yönetimi yerine `ThreadPoolExecutor` kullanımı (maksimum 100 worker), geniş port aralıklarında sistem kaynaklarının tükenmesini ve thread patlamasını önler
@@ -89,13 +89,13 @@ Port 21 (FTP): FTP transmits data in plaintext... 🔐 Öneri: FTPS/SFTP'ye geç
 
 ---
 
-## �👨‍💻 Geliştirici
+## 👨‍💻 Geliştirici
 
 - Muhammet Alperen Şıvgın – [GitHub](https://github.com/MuhammetSec-Exilex)
 
 ---
 
-## 📜 Lisans
+## Lisans
 
 MIT Lisansı. Detaylar için `LICENSE` dosyasını inceleyin.
 ```
