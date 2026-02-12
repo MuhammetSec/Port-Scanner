@@ -67,7 +67,29 @@ Port 21 (FTP): FTP transmits data in plaintext... 🔐 Öneri: FTPS/SFTP'ye geç
 
 ---
 
-## 👨‍💻 Geliştirici
+## � Versiyon 1.1 - Performans & Stabilite Güncellemesi
+
+### Performans İyileştirmeleri
+- **Çoklu İş Parçacığı Optimizasyonu**: Manuel thread yönetimi yerine `ThreadPoolExecutor` kullanımı (maksimum 100 worker), geniş port aralıklarında sistem kaynaklarının tükenmesini ve thread patlamasını önler
+- **Daha Hızlı Tarama Süreleri**: Socket timeout 1.0s'den 0.5s'ye düşürüldü, güvenilirlikten ödün vermeden genel tarama hızını önemli ölçüde artırır
+- **Kaynak Yönetimi**: Otomatik temizleme ve thread havuzu yönetimi, verimli CPU ve bellek kullanımını sağlar
+
+### Hata Düzeltmeleri
+- **Zarif Kesintileme**: Tarama sırasında Ctrl+C kullanıldığında donma sorunu düzeltildi—artık anında ve temiz bir şekilde sonlanır
+- **Hata Yönetimi**: Thread havuzu içindeki exception handling iyileştirildi, sessiz hataları önler
+
+### Teknik Detaylar
+- Manuel `threading.Thread` kullanımından `concurrent.futures.ThreadPoolExecutor`'a geçiş yapıldı
+- Otomatik kaynak temizliği için context manager kullanımı eklendi
+- Anında tarama sonlandırması için geliştirilmiş KeyboardInterrupt sinyal işleme
+
+---
+
+**Yükseltme Önerisi**: Bu versiyon, özellikle büyük port aralıkları (1000+ port) tarayan veya sınırlı kaynaklara sahip sistemlerde çalışan tüm kullanıcılar için önerilir.
+
+---
+
+## �👨‍💻 Geliştirici
 
 - Muhammet Alperen Şıvgın – [GitHub](https://github.com/MuhammetSec-Exilex)
 
