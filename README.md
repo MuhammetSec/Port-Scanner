@@ -57,6 +57,7 @@ python3 PortScanner_1.0.py -t <hedef_ip_adresi> -sp <başlangıç_portu> -ep <bi
 | --end_port | -ep | int | ✓ Zorunlu | Tarama bitiş portu |
 | --timeout | -to | float | 0.5 | Socket timeout süresi (saniye cinsinden) |
 | --workers | -w | int | 100 | Çalışan thread sayısı |
+| --show-suspicious | -ss | bool | false | Şüpheli/açık görünen portları (banner yok) gösterir |
 
 ### Örnek Kullanımlar
 
@@ -78,6 +79,11 @@ python3 PortScanner_1.0.py -t scanme.nmap.org -sp 20 -ep 100 -w 200
 **Özel timeout ve worker sayısı ile tarama:**
 ```bash
 python3 PortScanner_1.0.py -t scanme.nmap.org -sp 20 -ep 1000 -to 0.3 -w 150
+```
+
+**Şüpheli portları da göster:**
+```bash
+python3 PortScanner_1.0.py -t scanme.nmap.org -sp 1 -ep 500 -ss
 ```
 
 ---
@@ -158,6 +164,12 @@ Port 443 (https): Ensure the SSL/TLS certificate is valid...
 ### Hata Yönetimi
 - **Net Hata Mesajları**: Hatalar kırmızı renkte, anlaşılır biçimde gösterilir
 - **Güvenli Çıkış**: Geçersiz girişlerde program `sys.exit(1)` ile temiz şekilde kapanır
+
+### Banner Grabbing (Yanlış Pozitifleri Azaltma)
+- **Akıllı Doğrulama (2 Adım)**: Önce `recv(1024)` ile pasif banner denemesi yapılır (SSH/FTP/MySQL). Veri gelmezse `HEAD / HTTP/1.1` gönderilip tekrar `recv(1024)` ile HTTP bannerı denenir.
+- **Doğrulama Mantığı**: Her iki adımda da veri gelmezse port **ŞÜPHELİ** sayılır, veri gelirse **AÇIK** olarak doğrulanır.
+- **Varsayılan Temiz Çıktı**: Şüpheli portlar varsayılan olarak ekrana yazdırılmaz ve özet listede yer almaz.
+- **İsteğe Bağlı Görüntüleme**: `-ss / --show-suspicious` kullanılırsa şüpheli portlar sarı renkte gösterilir.
 
 ### Örnek Hata Mesajı
 ```
