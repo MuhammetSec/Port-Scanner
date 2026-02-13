@@ -149,6 +149,22 @@ Port 443 (https): Ensure the SSL/TLS certificate is valid...
 ```
 
 ---
+## 🚀 Versiyon 1.2 - Girdi Doğrulama & Hata Yönetimi Güncellemesi
+
+### Girdi Doğrulama
+- **Port Aralığı Kontrolü**: `-sp` ve `-ep` değerleri artık $1$-$65535$ aralığında doğrulanır
+- **Mantıksal Kontrol**: Başlangıç portu bitiş portundan büyükse işlem durdurulur
+
+### Hata Yönetimi
+- **Net Hata Mesajları**: Hatalar kırmızı renkte, anlaşılır biçimde gösterilir
+- **Güvenli Çıkış**: Geçersiz girişlerde program `sys.exit(1)` ile temiz şekilde kapanır
+
+### Örnek Hata Mesajı
+```
+[!] Error: Start port cannot be greater than end port.
+```
+
+---
 ## � Versiyon 1.1 - Performans & Stabilite Güncellemesi
 
 ### Performans İyileştirmeleri
