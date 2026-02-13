@@ -14,6 +14,16 @@ print_lock = threading.Lock()
 open_ports = []  # Açık portları ve servis adlarını toplayacağız
 init()
 
+class CustomArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        if "argument -sp" in message or "--start_port" in message:
+            cprint("[!] Error: Start port must be an integer.", "red")
+        elif "argument -ep" in message or "--end_port" in message:
+            cprint("[!] Error: End port must be an integer.", "red")
+        else:
+            cprint(f"[!] Error: {message}", "red")
+        sys.exit(1)
+
 # Harf harf yazdırma fonksiyonu
 def type_effect(text, color="white", delay=0.01):
     for char in text:
@@ -59,7 +69,7 @@ def scan_port(target_ip, port, timeout=0.5):
 
 def parse_args():
     epilog = "Example: python port_scanner.py -t scanme.nmap.org -sp 20 -ep 100 -to 0.5 -w 100"
-    parser = argparse.ArgumentParser(description="🔍 Simple Multithreaded Port Scanner with Security Recommendations", epilog=epilog)
+    parser = CustomArgumentParser(description="🔍 Simple Multithreaded Port Scanner with Security Recommendations", epilog=epilog)
     parser.add_argument("-t", "--target", required=True, help="Target IP or domain")
     parser.add_argument("-sp", "--start_port", type=int, required=True, help="Start port")
     parser.add_argument("-ep", "--end_port", type=int, required=True, help="End port")
@@ -92,6 +102,18 @@ def main():
     end_port = args.end_port
     timeout = args.timeout
     workers = args.workers
+
+    if start_port > end_port:
+        cprint("[!] Error: Start port cannot be greater than end port.", "red")
+        sys.exit(1)
+
+    if not (1 <= start_port <= 65535):
+        cprint("[!] Error: Start port must be between 1 and 65535.", "red")
+        sys.exit(1)
+
+    if not (1 <= end_port <= 65535):
+        cprint("[!] Error: End port must be between 1 and 65535.", "red")
+        sys.exit(1)
 
     try:
         target_ip = socket.gethostbyname(target)
