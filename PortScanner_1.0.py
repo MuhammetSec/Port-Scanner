@@ -43,10 +43,10 @@ def suggest_security(port):
     return suggestions.get(port, "None")
 
 # Her portu ayrı thread ile tarayan fonksiyon
-def scan_port(target_ip, port):
+def scan_port(target_ip, port, timeout=0.5):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IPv4 ve TCP kullanarak socket oluştur.
-        sock.settimeout(0.5)
+        sock.settimeout(timeout)
         result = sock.connect_ex((target_ip, port)) # connect_ex, başarısızlık durumunda hata kodu döndürür.
         if result == 0:
             service = get_service_name(port)
@@ -58,11 +58,13 @@ def scan_port(target_ip, port):
         pass
 
 def parse_args():
-    epilog = "Example: python port_scanner.py -t scanme.nmap.org -sp 20 -ep 100"
+    epilog = "Example: python port_scanner.py -t scanme.nmap.org -sp 20 -ep 100 -to 0.5 -w 100"
     parser = argparse.ArgumentParser(description="🔍 Simple Multithreaded Port Scanner with Security Recommendations", epilog=epilog)
     parser.add_argument("-t", "--target", required=True, help="Target IP or domain")
     parser.add_argument("-sp", "--start_port", type=int, required=True, help="Start port")
     parser.add_argument("-ep", "--end_port", type=int, required=True, help="End port")
+    parser.add_argument("-to", "--timeout", type=float, default=0.5, help="Socket timeout in seconds (default: 0.5)")
+    parser.add_argument("-w", "--workers", type=int, default=100, help="Number of worker threads (default: 100)")
     return parser.parse_args()
 
 def splash_screen():
@@ -88,6 +90,8 @@ def main():
     target = args.target
     start_port = args.start_port
     end_port = args.end_port
+    timeout = args.timeout
+    workers = args.workers
 
     try:
         target_ip = socket.gethostbyname(target)
@@ -96,11 +100,12 @@ def main():
         return
 
     type_effect(f"\n🔍 Scanning {target_ip} from port {start_port} to {end_port}", color="cyan")
+    type_effect(f"⚙️  Settings | Timeout: {timeout}s | Workers: {workers}", color="magenta")
     type_effect(f"🕒 Start time: {datetime.now()}\n", color="white")
 
     try:
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            futures = {executor.submit(scan_port, target_ip, port): port for port in range(start_port, end_port + 1)}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {executor.submit(scan_port, target_ip, port, timeout): port for port in range(start_port, end_port + 1)}
             for future in as_completed(futures):
                 try:
                     future.result()
