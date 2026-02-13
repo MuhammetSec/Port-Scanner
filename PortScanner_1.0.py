@@ -11,18 +11,9 @@ from colorama import init
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 print_lock = threading.Lock()
-open_ports = []  # Açık portları ve servis adlarını toplayacağız
+open_ports = []  # Açık portları, servis adlarını ve banner bilgilerini toplayacağız
+suspicious_ports = []  # Banner alamadığımız şüpheli portları toplayacağız
 init()
-
-class CustomArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        if "argument -sp" in message or "--start_port" in message:
-            cprint("[!] Error: Start port must be an integer.", "red")
-        elif "argument -ep" in message or "--end_port" in message:
-            cprint("[!] Error: End port must be an integer.", "red")
-        else:
-            cprint(f"[!] Error: {message}", "red")
-        sys.exit(1)
 
 # Harf harf yazdırma fonksiyonu
 def type_effect(text, color="white", delay=0.01):
@@ -53,28 +44,54 @@ def suggest_security(port):
     return suggestions.get(port, "None")
 
 # Her portu ayrı thread ile tarayan fonksiyon
-def scan_port(target_ip, port, timeout=0.5):
+def scan_port(target_ip, port, timeout=0.5, show_suspicious=False):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IPv4 ve TCP kullanarak socket oluştur.
         sock.settimeout(timeout)
         result = sock.connect_ex((target_ip, port)) # connect_ex, başarısızlık durumunda hata kodu döndürür.
         if result == 0:
-            service = get_service_name(port)
-            with print_lock:
-                type_effect(f"[+] Port {port} is open ({service})", color="green", delay=0.005)
-                open_ports.append((port, service))
+            data = b""
+            try:
+                data = sock.recv(1024)
+            except socket.timeout:
+                data = b""
+            except Exception:
+                data = b""
+
+            if not data:
+                try:
+                    sock.sendall(b"HEAD / HTTP/1.1\r\n\r\n")
+                    data = sock.recv(1024)
+                except socket.timeout:
+                    data = b""
+                except Exception:
+                    data = b""
+
+            if data:
+                service = get_service_name(port)
+                banner = data.decode(errors="replace").strip()
+                with print_lock:
+                    type_effect(f"[+] Port {port} is open ({service})", color="green", delay=0.005)
+                    type_effect(f"    Banner: {banner[:120]}", color="white", delay=0.002)
+                    open_ports.append((port, service, banner))
+            else:
+                with print_lock:
+                    suspicious_ports.append(port)
+                    if show_suspicious:
+                        type_effect(f"[?] Port {port} is suspicious/open (no banner)", color="yellow", delay=0.005)
         sock.close()
     except:
         pass
 
 def parse_args():
     epilog = "Example: python port_scanner.py -t scanme.nmap.org -sp 20 -ep 100 -to 0.5 -w 100"
-    parser = CustomArgumentParser(description="🔍 Simple Multithreaded Port Scanner with Security Recommendations", epilog=epilog)
+    parser = argparse.ArgumentParser(description="🔍 Simple Multithreaded Port Scanner with Security Recommendations", epilog=epilog)
     parser.add_argument("-t", "--target", required=True, help="Target IP or domain")
     parser.add_argument("-sp", "--start_port", type=int, required=True, help="Start port")
     parser.add_argument("-ep", "--end_port", type=int, required=True, help="End port")
     parser.add_argument("-to", "--timeout", type=float, default=0.5, help="Socket timeout in seconds (default: 0.5)")
     parser.add_argument("-w", "--workers", type=int, default=100, help="Number of worker threads (default: 100)")
+    parser.add_argument("-ss", "--show-suspicious", action="store_true", help="Show suspicious/open ports with no banner")
     return parser.parse_args()
 
 def splash_screen():
@@ -102,6 +119,7 @@ def main():
     end_port = args.end_port
     timeout = args.timeout
     workers = args.workers
+    show_suspicious = args.show_suspicious
 
     if start_port > end_port:
         cprint("[!] Error: Start port cannot be greater than end port.", "red")
@@ -127,7 +145,7 @@ def main():
 
     try:
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {executor.submit(scan_port, target_ip, port, timeout): port for port in range(start_port, end_port + 1)}
+            futures = {executor.submit(scan_port, target_ip, port, timeout, show_suspicious): port for port in range(start_port, end_port + 1)}
             for future in as_completed(futures):
                 try:
                     future.result()
@@ -141,10 +159,16 @@ def main():
     type_effect(f"\n📖 Open Ports and Security Recommendations:\n", color="yellow")
 
     if open_ports:
-        for port, service in sorted(open_ports):
+        for port, service, banner in sorted(open_ports):
             type_effect(f"Port {port} ({service}): {suggest_security(port)}", color="white", delay=0.003)
+            type_effect(f"Banner: {banner[:120]}", color="white", delay=0.002)
     else:
         type_effect("No open ports found.", color="red")
+
+    if show_suspicious and suspicious_ports:
+        type_effect(f"\n⚠️  Suspicious/Open Ports (no banner):\n", color="yellow")
+        for port in sorted(suspicious_ports):
+            type_effect(f"Port {port}: No banner received", color="yellow", delay=0.003)
 
 if __name__ == "__main__":
     splash_screen()
